@@ -29,8 +29,8 @@ public class APIInputAgent
     private List<JSONKeyToIRIMapper> mappings;
     public static final String generatedIRIPrefix = TimeSeriesSparql.ns_kb + "WeatherStation";
     public static final String timeUnit = OffsetDateTime.class.getSimpleName();
-    public static final String timestampkey = "obsTimeUtc";
-    public static final String status = "qcstatus";
+    //public static final String timestampkey = "obsTimeUtc";
+    //public static final String status = "qcstatus";
     public static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
      
 
@@ -44,18 +44,18 @@ public class APIInputAgent
 
             try
             {
-                mappingFolder = System.getenv(prop.getProperty("caresweatherstation.mappingfolder")); 
+                mappingFolder = System.getenv(prop.getProperty("WeatherAPI.mappingfolder")); 
                 //to substitute for values i need;
             }
             catch(NullPointerException e)
             {
-                throw new IOException("The key caresweatherstation.mappingfolder cannot be found in the file");
+                throw new IOException("The key WeatherAPI.mappingfolder cannot be found in the file");
 
             }
 
             if(mappingFolder==null)
             {
-                throw new InvalidPropertiesFormatException("The properties file does not contain the key caresweatherstation.mappingfolder with a path to the folder containing the required JSON key to IRI Mappings");
+                throw new InvalidPropertiesFormatException("The properties file does not contain the key WeatherAPI.mappingfolder with a path to the folder containing the required JSON key to IRI Mappings");
             }
 
             readmappings(mappingFolder);
@@ -218,7 +218,7 @@ public class APIInputAgent
         Map<String, List<Object>> readingsMap = new HashMap<>();
         JSONArray jsArr;
         try {
-            jsArr = readings.getJSONArray("observations");
+            jsArr = readings.getJSONArray("items");
             for(int i=0; i<jsArr.length();i++) {
                 JSONObject currentEntry = jsArr.getJSONObject(i);
                 Iterator<String> it = currentEntry.keys();
@@ -244,25 +244,165 @@ public class APIInputAgent
                         if (!readingsMap.containsKey(key)) {
                             readingsMap.put(key, new ArrayList<>());
                         }
-                        if (key.equals("metric_si"))
-                            Log.info(String.format("Reading %s key now", key));
+                        //if (key.equals("metric_si"))
+                        //   Log.info(String.format("Reading %s key now", key));
                         readingsMap.get(key).add(value);
                     } 
                     else 
                     {
-                        JSONObject obj = currentEntry.getJSONObject("metric_si");
-                        for (Iterator<String> it1 = obj.keys(); it1.hasNext(); ) {
-                            String key1 = it1.next();
-                            Object value1 = obj.get(key1);
-                            // Handle cases where the API returned null
-                            if (value1 == JSONObject.NULL) {
-                                value1 = Double.NaN;
+                        if(key.equals("valid_period"))
+                        {
+                            JSONObject obj = currentEntry.getJSONObject("valid_period");
+                            for(Iterator<String> it1 = obj.keys();it1.hasNext();)
+                            {
+                                String key1 = it1.next();
+                                Object value1 = obj.get(key1);
+                                
+                                if(value1 == JSONObject.NULL)
+                                 value1 = "NA";
+
+                                if(!readingsMap.containsKey(key1))
+                                 readingsMap.put(key1,new ArrayList<>());
+                                
+                                readingsMap.get(key1).add(value1); 
                             }
-                            // If the key is not present yet initialize the list
-                            if (!readingsMap.containsKey(key1)) {
-                                readingsMap.put(key1, new ArrayList<>());
+                        }
+     
+                        else if (key.equals("general"))
+                        {
+                            JSONObject obj = currentEntry.getJSONObject("general");
+                            for(Iterator<String> it1 = obj.keys();it1.hasNext();)
+                            {
+                                String key1 = it1.next();
+                                Object value1 = obj.get(key1);
+
+                                if(value1.getClass()!=JSONObject.class)
+                                {
+                                    
+                                   if (value1 == JSONObject.NULL) 
+                                   {
+                                        value1 = "NA";
+                                   }
+                                  // If the key is not present yet initialize the list
+                                  if (!readingsMap.containsKey(key1)) 
+                                  {
+                                    readingsMap.put(key1, new ArrayList<>());
+                                  }
+                                  readingsMap.get(key1).add(value1);
+                                }
+                                else
+                                {
+                                    if(key1.equals("relative_humidity"))
+                                    {
+                                        JSONObject obj2 = obj.getJSONObject("relative_humidity");
+                                        for(Iterator<String> it2 = obj2.keys();it2.hasNext();)
+                                        {
+                                            String key2 = it2.next();
+                                            String value2 = obj2.get(key2);
+
+                                            if(value2==JSONObject.NULL)
+                                            {
+                                                value2 = Double.NaN;
+                                            }
+                                            if(!readingsMap.containsKey(key2))
+                                             readingsMap.put(key2,new ArrayList<>());
+                                           
+                                            readingsMap.get(key2).add(value2); 
+                                        }
+                                    }
+                                    else if (key1.equals("temperature"))
+                                    {
+                                        JSONObject obj2 = obj.getJSONObject("temperature");
+                                        for(Iterator<String> it2 = obj2.keys();it2.hasNext();)
+                                        {
+                                            String key2 = it2.next();
+                                            String value2 = obj2.get(key2);
+
+                                            if(value2==JSONObject.NULL)
+                                            {
+                                                value2 = Double.NaN;
+                                            }
+                                            if(!readingsMap.containsKey(key2))
+                                             readingsMap.put(key2,new ArrayList<>());
+                                           
+                                            readingsMap.get(key2).add(value2); 
+                                        }
+                                    }
+                                    else if (key1.equals("wind"))
+                                    {
+                                        JSONObject obj2 = obj.getJSONObject("wind");
+                                        for(Iterator <String> it2 = obj2.keys();it2.hasNext();)
+                                        {
+                                            String key2 = it2.next();
+                                            Object value2 = obj2.get(key2);
+
+                                            if(value2.getClass()!=JSONObject.class)
+                                            {
+                                                if(value2==JSONObject.NULL)
+                                                 value2 = "NA";
+                                                
+                                                if(!readingsMap.containsKey(key2))
+                                                 readingsMap.put(key2,new ArrayList<>());
+                                               
+                                                readingsMap.get(key2).add(value2); 
+                                            }
+                                            else
+                                            {
+                                                JSONObject obj3 = obj2.getJSONObject("speed");
+                                                for(Iterator<String> it3 = obj3.keys();it3.hasNext();)
+                                                {
+                                                    String key3 = it3.next();
+                                                    Object value3 = obj3.get(key3);
+
+                                                    if(value3==JSONObject.NULL)
+                                                     value3 = Double.NaN;
+
+                                                    if(!readingsMap.containsKey(key3))
+                                                     readingsMap.put(key3,new ArrayList<>());
+                                                   
+                                                    readingsMap.get(key3).add(value2);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            readingsMap.get(key1).add(value1);
+                        }
+                        else 
+                        {
+                            JSONArray js = currentEntry.getJSONArray("periods");
+                            
+                            for(int j=0;j<js.length();j++)
+                            {
+                                JSONObject currentPeriod = js.getJSONObject(j);
+                                for(Iterator<String> it1 = currentPeriod.keys();it1.hasNext();)
+                                {
+                                    String key1 = it1.next();
+                                    Object value1 = currentPeriod.get(key1);
+                                    JSONObject obj2;
+
+                                    if(value1.equals("time"))
+                                     obj2 = currentPeriod.getJSONObject("time");
+                                    else
+                                     obj2 = currentPeriod.getJSONObject("regions");
+
+                                    for(Iterator<String> it2 = obj2.keys(); it2.hasNext();)
+                                     {
+                                            String key2 = it2.next();
+                                            Object value2 = obj2.get(key2);
+
+                                            if(value2==JSONObject.NULL)
+                                             value2 = "NA";
+
+                                            if(!readingsMap.containsKey(key2))
+                                             readingsMap.put(key2,new ArrayList<>());
+
+                                            readingsMap.get(key2).add(value2);
+                                     }
+                                    
+                                }
+                            }
+    
                         }
                     }
                 }
@@ -295,11 +435,6 @@ public class APIInputAgent
         return readingsMapTyped;
 
     }
-
-
-
-
-
 
 
     private List<TimeSeries<OffsetDateTime>> convertReadingsToTimeSeries(Map<String, List<?>> weatherReadings)
@@ -418,5 +553,3 @@ public class APIInputAgent
 
 
 }
-
-
