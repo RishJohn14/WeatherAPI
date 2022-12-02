@@ -229,16 +229,7 @@ public class APIInputAgent
                         // Get the value and add it to the corresponding list
                         // Handle cases where the API returned null
                         if (value == JSONObject.NULL) {
-                            // Handling depends on the datatype of the current key
-                            String datatype = getClassFromJSONKey(key).getSimpleName();
-                            // If it is a number use NaN (not a number)
-                            if (datatype.equals(Integer.class.getSimpleName()) || datatype.equals(Double.class.getSimpleName()) || datatype.equals(Long.class.getSimpleName())) {
-                                value = Double.NaN;
-                            }
-                            // Otherwise, use the string NA (not available)
-                            else {
-                                value = "NA";
-                            }
+                            value="NA";
                         }
                         // If the key is not present yet initialize the list
                         if (!readingsMap.containsKey(key)) {
@@ -255,7 +246,7 @@ public class APIInputAgent
                             JSONObject obj = currentEntry.getJSONObject("valid_period");
                             for(Iterator<String> it1 = obj.keys();it1.hasNext();)
                             {
-                                String key1 = it1.next();
+                                String key1 = "valid_period"+it1.next();
                                 Object value1 = obj.get(key1);
                                 
                                 if(value1 == JSONObject.NULL)
@@ -299,6 +290,7 @@ public class APIInputAgent
                                         {
                                             String key2 = it2.next();
                                             String value2 = obj2.get(key2);
+                                            key2 = "relative_humidity"+key2;
 
                                             if(value2==JSONObject.NULL)
                                             {
@@ -317,11 +309,13 @@ public class APIInputAgent
                                         {
                                             String key2 = it2.next();
                                             String value2 = obj2.get(key2);
+                                            key2 =  "temperature"+key2;
 
                                             if(value2==JSONObject.NULL)
                                             {
                                                 value2 = Double.NaN;
                                             }
+
                                             if(!readingsMap.containsKey(key2))
                                              readingsMap.put(key2,new ArrayList<>());
                                            
@@ -353,6 +347,7 @@ public class APIInputAgent
                                                 {
                                                     String key3 = it3.next();
                                                     Object value3 = obj3.get(key3);
+                                                    key3 = "windspeed" + key3;
 
                                                     if(value3==JSONObject.NULL)
                                                      value3 = Double.NaN;
@@ -375,6 +370,7 @@ public class APIInputAgent
                             for(int j=0;j<js.length();j++)
                             {
                                 JSONObject currentPeriod = js.getJSONObject(j);
+                                int chk=0;
                                 for(Iterator<String> it1 = currentPeriod.keys();it1.hasNext();)
                                 {
                                     String key1 = it1.next();
@@ -382,14 +378,25 @@ public class APIInputAgent
                                     JSONObject obj2;
 
                                     if(value1.equals("time"))
-                                     obj2 = currentPeriod.getJSONObject("time");
+                                    {
+                                       obj2 = currentPeriod.getJSONObject("time");
+                                       chk=1;
+                                    }
                                     else
-                                     obj2 = currentPeriod.getJSONObject("regions");
+                                     {
+                                        obj2 = currentPeriod.getJSONObject("regions");
+                                        chk=0;
+                                     }
 
                                     for(Iterator<String> it2 = obj2.keys(); it2.hasNext();)
                                      {
                                             String key2 = it2.next();
                                             Object value2 = obj2.get(key2);
+
+                                            if(chk)
+                                             key2 = "time"+key2;
+                                            else
+                                             key2 = key2+"region";
 
                                             if(value2==JSONObject.NULL)
                                              value2 = "NA";
@@ -536,20 +543,19 @@ public class APIInputAgent
 
 
 
-    private Class<?> getClassFromJSONKey(String jsonKey) {
-        if (jsonKey.contains(timestampkey) || jsonKey.contains("stationID") || jsonKey.contains("obsTimeLocal") || jsonKey.contains("tz")){
+    private Class<?> getClassFromJSONKey(String jsonKey) 
+    {
+         if (jsonKey.contains("relative_humiditylow") || jsonKey.contains("relative_humidityhigh") || jsonKey.contains("temperaturelow") || jsonKey.contains("temperaturehigh")||jsonKey.contains("windspeedlow")||jsonKey.contains("windspeedhigh"))
+         {
+             return Double.class;
+         }
+        else
+         {
             return String.class;
-        }
-        else if( jsonKey.contains(status) || jsonKey.contains("winddirAvg")){
-            return Integer.class;
-        }
-        else if(jsonKey.equals("epoch")){
-            return Long.class;
-        }
-        else{
-            return Double.class;
-        }
+         }
     }
 
 
 }
+
+
