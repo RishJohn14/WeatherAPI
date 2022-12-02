@@ -43,7 +43,7 @@ public class APIAgentLauncher extends JPSAgent
         JSONObject jsonMessage = new JSONObject();
 
         if(validateInput(requestparams))
-        {
+        {   
             Log.info("Passing Request to API Input Agent");
             String agentProperties = System.getenv(requestParams.getString(Key_AgentProp));
             String clientProperties = System.getenv(requestParams.getString(Key_ClientProp));
