@@ -1,3 +1,5 @@
+//package uk.ac.cam.cares.jps.agent.WeatherAPI;
+
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -9,6 +11,9 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import uk.ac.cam.cares.jps.base.exception.JPSRuntimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 import java.io.*;
 import java.util.Properties;
@@ -21,7 +26,7 @@ public class APIConnector
 {
     private String API_URL = "https://api.data.gov.sg/";
     private String date;
-
+    
     private static final String ERRORMSG = "Weather data could not be retrieved";
     private static final Logger LOG = java.util.logging.LogManager.getLogManager(APIAgentLauncher.class);
 
@@ -62,14 +67,14 @@ public class APIConnector
         
         String path = API_URL+"v1/environment/24-hour-weather-forecast?date_time="+date;
 
-        try ( CloseableHttpClient httpclient =  HttpClients.createDefualt())
+        try ( CloseableHttpClient httpclient =  HttpClients.createDefault())
         {
             HttpGet readrequest = new HttpGet(path);
             try ( CloseableHttpResponse response = httpclient.execute(readrequest))
             {
                 int status = response.getStatusLine().getStatusCode();
 
-                if(status==200)
+                if(status==200) 
                 {
                     return new JSONObject(EntityUtils.toString(response.getEntity()));
 
@@ -107,24 +112,31 @@ public class APIConnector
                 throw new IOException("The file is missing: \"weather.api_url=<api_url>\"");
             }
 
+            LocalDateTime current = LocalDateTime.now();
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");  
+        
+            String t = current.format(dtf);
+            int size = t.length();
+            String fin="";
+            for(int i=0;i<size;i++)
+            {
+              char c = t.charAt(i);
+              if(i==10)
+              {
+                fin = fin + "T";
+              }
+              else if (i==13||i==16)
+              {
+               fin = fin + "%3A";
+              }
+               else
+               {
+                fin = fin + c; 
+               }        
+            }
 
-            if(prop.contains("weather.date"))
-            {
-                String tempdate = prop.getProperty("weather.date");
-                String t = "";
-                for(int i=0;i<tempdate.length();i++)
-                {
-                    if(i!=13 && i!=16)
-                    t = t + tempdate.charAt(i);
-                    else
-                    t = t + "%3A" + tempdate.charAt(i);
-                }
-                date = t;
-            }
-            else
-            {
-                throw new IOException("The file is missing: \"weather.date=<date>\"");
-            }
+            date = fin;
+
         }
     }
 
