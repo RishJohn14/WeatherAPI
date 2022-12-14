@@ -1,4 +1,4 @@
-//package uk.ac.cam.cares.jps.agent.WeatherAPI;
+ //package uk.ac.cam.cares.jps.agent.WeatherAPI;
 
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -28,7 +28,8 @@ public class APIConnector
     private String date;
     
     private static final String ERRORMSG = "Weather data could not be retrieved";
-    private static final Logger LOG = java.util.logging.LogManager.getLogManager(APIAgentLauncher.class);
+    private static final Logger LOG = LogManager.getLogger(APIAgentLauncher.class);
+  
 
     //Standard Constructor to initialise the instance variables
     public APIConnector(String URL, String d)
@@ -36,6 +37,7 @@ public class APIConnector
         API_URL=URL;
         date = d;
     }
+    
 
     //Constructor to initialise the variables according to the Properties file
 
@@ -105,13 +107,12 @@ public class APIConnector
 
             if(prop.contains("weather.api_url"))
             {
-                API_URL = prop.getProperty("weather.api_url");
+                this.API_URL = prop.getProperty("weather.api_url");
             }
             else
             {
                 throw new IOException("The file is missing: \"weather.api_url=<api_url>\"");
             }
-
             LocalDateTime current = LocalDateTime.now();
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");  
         
