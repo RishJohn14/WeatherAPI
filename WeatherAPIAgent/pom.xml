@@ -3,8 +3,8 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>uk.ac.cam.cares.jps</groupId>
-    <artifactId>caresweatherstation-agent</artifactId>
-    <version>1.2.0</version>
+    <artifactId>weatherapi-agent</artifactId>
+    <version>1.3.0</version>
     <packaging>war</packaging>
 
 
