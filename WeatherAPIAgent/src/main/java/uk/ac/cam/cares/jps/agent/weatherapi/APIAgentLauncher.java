@@ -20,22 +20,22 @@ import org.apache.logging.log4j.Logger;
 public class APIAgentLauncher extends JPSAgent
 {
     public static final String Key_AgentProp = "agentProperties";
-    public static final String Key_APIProp = "APIProperties";
-    public static final String Key_ClientProp = "ClientProperties";
+    public static final String Key_APIProp = "apiProperties";
+    public static final String Key_ClientProp = "clientProperties";
     
-    private static final Logger Log = java.util.logging.LogManager.getLogManager(APIAgentLauncher.class);
+    private static final Logger Log = LogManager.getLogger(APIAgentLauncher.class);
 
 
     private static final String ARGUMENT_MISMATCH_MSG = "Need three properties files in the following order: 1) input agent 2) time series client 3) API connector.";
-    private static final String AGENT_ERROR_MSG = "The CARESWeatherStation input agent could not be constructed!";
+    private static final String AGENT_ERROR_MSG = "The WeatherAPI input agent could not be constructed!";
     private static final String TSCLIENT_ERROR_MSG = "Could not construct the time series client needed by the input agent!";
     private static final String INITIALIZE_ERROR_MSG = "Could not initialize time series.";
-    private static final String CONNECTOR_ERROR_MSG = "Could not construct the CARES weather station API connector needed to interact with the API!";
+    private static final String CONNECTOR_ERROR_MSG = "Could not construct the weather station API connector needed to interact with the API!";
     private static final String GET_READINGS_ERROR_MSG = "Some readings could not be retrieved.";
 
     public JSONObject processRequestParameters(JSONObject requestparams, HttpServletRequest request)
     {
-        processRequestParameters(requestparams);
+        return processRequestParameters(requestparams);
     }
     
     public JSONObject processRequestParameters(JSONObject requestparams)
@@ -45,9 +45,9 @@ public class APIAgentLauncher extends JPSAgent
         if(validateInput(requestparams))
         {   
             Log.info("Passing Request to API Input Agent");
-            String agentProperties = System.getenv(requestParams.getString(Key_AgentProp));
-            String clientProperties = System.getenv(requestParams.getString(Key_ClientProp));
-            String apiProperties = System.getenv(requestParams.getString(Key_APIProp));
+            String agentProperties = System.getenv(requestparams.getString(Key_AgentProp));
+            String clientProperties = System.getenv(requestparams.getString(Key_ClientProp));
+            String apiProperties = System.getenv(requestparams.getString(Key_APIProp));
             
             String[] args = new String []{agentProperties,clientProperties,apiProperties};
             jsonMessage = initializeAgent(args);
@@ -71,9 +71,8 @@ public class APIAgentLauncher extends JPSAgent
         String agentProperties;
         String clientProperties;
         String apiproperties;
-        if(requestparams.isempty())
-         return false;
-
+        if(requestparams.isEmpty())
+         validate = false;
         else
         {
             validate = requestparams.has(Key_AgentProp);
@@ -155,8 +154,8 @@ public class APIAgentLauncher extends JPSAgent
         }
         catch(IOException e)
         {
-            log.error(CONNECTOR_ERROR_MSG,e);
-            throw new JPSRunTimeException(CONNECTOR_ERROR_MSG,e);
+            Log.error(CONNECTOR_ERROR_MSG,e);
+            throw new JPSRuntimeException(CONNECTOR_ERROR_MSG,e);
         }
 
         Log.info("API Connector Object Initialized");
@@ -171,11 +170,11 @@ public class APIAgentLauncher extends JPSAgent
         catch(Exception e)
         {
             Log.error(GET_READINGS_ERROR_MSG,e);
-            throw new JPSRunTimeException(GET_READINGS_ERROR_MSG,e);
+            throw new JPSRuntimeException(GET_READINGS_ERROR_MSG,e);
         }
 
         Log.info(String.format("Retrieved %d weather readings", weatherReadings.length()));
-        jsonMessage.accumulate("Result","Retrieved"+weatherReadings.getJSONArray("Observations").length+" station readings");
+        jsonMessage.accumulate("Result","Retrieved"+weatherReadings.getJSONArray("items").length()+" station readings");
 
         if(!weatherReadings.isEmpty())
         {
