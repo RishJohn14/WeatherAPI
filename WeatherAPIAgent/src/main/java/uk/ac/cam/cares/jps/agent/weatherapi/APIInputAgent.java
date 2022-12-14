@@ -24,18 +24,20 @@ import org.apache.logging.log4j.Logger;
 
 public class APIInputAgent
 {
-    public static final Logger Log = java.util.logging.LogManager.getLogManager(APIInputAgent.class);
+    public static final Logger Log = LogManager.getLogger(APIAgentLauncher.class);
     private TimeSeriesClient<OffsetDateTime> tsclient;
     private List<JSONKeyToIRIMapper> mappings;
     public static final String generatedIRIPrefix = TimeSeriesSparql.ns_kb + "WeatherStation";
     public static final String timeUnit = OffsetDateTime.class.getSimpleName();
-    //public static final String timestampkey = "obsTimeUtc";
+    public static final String timestampKey = "start";
     //public static final String status = "qcstatus";
     public static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
-     
+ 
+
 
     public APIInputAgent(String propertiesFile) throws IOException
     {
+
         try(InputStream input = new FileInputStream(propertiesFile))
         {
             Properties prop = new Properties();
@@ -65,7 +67,7 @@ public class APIInputAgent
 
     public int getNumberofTimeSeries()
     {
-        return mappings.size;
+        return mappings.size();
     }
 
     public void setTsClient(TimeSeriesClient<OffsetDateTime> tsclient)
@@ -76,7 +78,7 @@ public class APIInputAgent
     private void readmappings(String mappingfolder) throws IOException
     {
         mappings = new ArrayList<>();
-        File folder = new File(mappingFolder);
+        File folder = new File(mappingfolder);
         File[] mappingFiles = folder.listFiles();
 
         if(mappingFiles==null)
@@ -106,7 +108,7 @@ public class APIInputAgent
             List<String> iris = mapping.getAllIRIs();
             if(!timeSeriesExist(iris))
             {
-                List<Class<?>> classes = iris.stream().map(this::getClassfromJSONKey).collect(Collectors.toList());
+                List<Class<?>> classes = iris.stream().map(this::getClassFromJSONKey).collect(Collectors.toList());
                 // TO clarify later on Google.
                 
                 try
@@ -117,7 +119,7 @@ public class APIInputAgent
                 }
                 catch(Exception e)
                 {
-                    throw new JPSRunTimeException("Could not instantiate TimeSeries");
+                    throw new JPSRuntimeException("Could not instantiate TimeSeries");
                 }
             }
         }
@@ -145,6 +147,7 @@ public class APIInputAgent
                 }
             }
         }
+        return true;
     }
 
     public void updateData(JSONObject weatherReadings) throws IllegalArgumentException
@@ -156,7 +159,7 @@ public class APIInputAgent
         }
         catch (Exception e)
         {
-            throw new JPSRunTimeException ("Readings cannot be empty");
+            throw new JPSRuntimeException ("Readings cannot be empty");
         }
 
 
@@ -177,7 +180,7 @@ public class APIInputAgent
                 OffsetDateTime endDataTime;
                 try 
                  {
-                	endDataTime= tsClient.getMaxTime(ts.getDataIRIs().get(0));
+                	endDataTime= tsclient.getMaxTime(ts.getDataIRIs().get(0));
                  } 
                  catch (Exception e) 
                  {
@@ -196,7 +199,7 @@ public class APIInputAgent
                 {
                 	try 
                     {
-                      tsClient.addTimeSeriesData(ts);
+                      tsclient.addTimeSeriesData(ts);
                       Log.debug(String.format("Time series updated for following IRIs: %s", String.join(", ", ts.getDataIRIs())));
                     }
                     catch (Exception e)
@@ -246,7 +249,7 @@ public class APIInputAgent
                             JSONObject obj = currentEntry.getJSONObject("valid_period");
                             for(Iterator<String> it1 = obj.keys();it1.hasNext();)
                             {
-                                String key1 = "valid_period"+it1.next();
+                                String key1 = it1.next();
                                 Object value1 = obj.get(key1);
                                 
                                 if(value1 == JSONObject.NULL)
@@ -256,7 +259,7 @@ public class APIInputAgent
                                  readingsMap.put(key1,new ArrayList<>());
                                 
                                 readingsMap.get(key1).add(value1); 
-                            }
+                            }   
                         }
      
                         else if (key.equals("general"))
@@ -289,7 +292,7 @@ public class APIInputAgent
                                         for(Iterator<String> it2 = obj2.keys();it2.hasNext();)
                                         {
                                             String key2 = it2.next();
-                                            String value2 = obj2.get(key2);
+                                            Object value2 = obj2.get(key2);
                                             key2 = "relative_humidity"+key2;
 
                                             if(value2==JSONObject.NULL)
@@ -308,7 +311,7 @@ public class APIInputAgent
                                         for(Iterator<String> it2 = obj2.keys();it2.hasNext();)
                                         {
                                             String key2 = it2.next();
-                                            String value2 = obj2.get(key2);
+                                            Object value2 = obj2.get(key2);
                                             key2 =  "temperature"+key2;
 
                                             if(value2==JSONObject.NULL)
@@ -393,7 +396,7 @@ public class APIInputAgent
                                             String key2 = it2.next();
                                             Object value2 = obj2.get(key2);
 
-                                            if(chk)
+                                            if(chk==1)
                                              key2 = "time"+key2;
                                             else
                                              key2 = key2+"region";
@@ -557,5 +560,3 @@ public class APIInputAgent
 
 
 }
-
-
