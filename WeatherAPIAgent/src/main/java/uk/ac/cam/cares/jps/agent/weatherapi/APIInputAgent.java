@@ -157,9 +157,9 @@ public class APIInputAgent
         {
             weatherReadingsMap = jsonObjectToMap(weatherReadings);
         }
-        catch (Exception e)
+        catch (Exception e) 
         {
-            throw new JPSRuntimeException ("Readings cannot be empty");
+            throw new JPSRuntimeException (e.toString());
         }
 
 
@@ -235,7 +235,7 @@ public class APIInputAgent
                             value="NA";
                         }
                         // If the key is not present yet initialize the list
-                        if (!readingsMap.containsKey(key)) {
+                        if (!readingsMap.containsKey(key)) { 
                             readingsMap.put(key, new ArrayList<>());
                         }
                         //if (key.equals("metric_si"))
@@ -358,7 +358,7 @@ public class APIInputAgent
                                                     if(!readingsMap.containsKey(key3))
                                                      readingsMap.put(key3,new ArrayList<>());
                                                    
-                                                    readingsMap.get(key3).add(value2);
+                                                    readingsMap.get(key3).add(value3);
                                                 }
                                             }
                                         }
@@ -369,10 +369,7 @@ public class APIInputAgent
                         else 
                         {
                             JSONArray js = currentEntry.getJSONArray("periods");
-                            
-                            for(int j=0;j<js.length();j++)
-                            {
-                                JSONObject currentPeriod = js.getJSONObject(j);
+                            JSONObject currentPeriod = js.getJSONObject(1);
                                 int chk=0;
                                 for(Iterator<String> it1 = currentPeriod.keys();it1.hasNext();)
                                 {
@@ -380,7 +377,7 @@ public class APIInputAgent
                                     Object value1 = currentPeriod.get(key1);
                                     JSONObject obj2;
 
-                                    if(value1.equals("time"))
+                                    if(key1.equals("time"))
                                     {
                                        obj2 = currentPeriod.getJSONObject("time");
                                        chk=1;
@@ -411,7 +408,6 @@ public class APIInputAgent
                                      }
                                     
                                 }
-                            }
     
                         }
                     }
@@ -420,6 +416,8 @@ public class APIInputAgent
         } catch (Exception e) {
             throw new JPSRuntimeException("Readings can not be empty!", e);
         }   
+
+        System.out.println(readingsMap);
 
         // Convert the values to the proper datatype //
         Map<String, List<?>> readingsMapTyped = new HashMap<>();
